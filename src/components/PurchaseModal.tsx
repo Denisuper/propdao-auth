@@ -21,13 +21,14 @@ interface PurchaseModalProps {
   tier: TierStyle
   isPro: boolean
   specs: { label: string; value: string }[]
+  originalPrice: number
 }
 
 type Step = 'review' | 'processing' | 'success'
 
 export function PurchaseModal({
   open, onClose, onConfirm,
-  challengeName, accountSize, tier, isPro, specs,
+  challengeName, accountSize, tier, isPro, specs, originalPrice,
 }: PurchaseModalProps) {
   const router  = useRouter()
   const [step,  setStep]  = useState<Step>('review')
@@ -129,7 +130,10 @@ export function PurchaseModal({
             {/* Total */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '1px solid #efefef', borderBottom: '1px solid #efefef', marginBottom: 20 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: '#22361f' }}>Total due today</span>
-              <span style={{ fontSize: 22, fontWeight: 800, color: '#166534' }}>$0.00</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: '#c4c4b8', textDecoration: 'line-through' }}>${originalPrice}</span>
+                <span style={{ fontSize: 22, fontWeight: 800, color: '#166534' }}>$0.00</span>
+              </div>
             </div>
 
             <p style={{ fontSize: 12, color: '#a3a8a0', lineHeight: 1.5, marginBottom: 20, textAlign: 'center' }}>

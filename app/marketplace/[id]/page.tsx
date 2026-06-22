@@ -368,7 +368,7 @@ export default function ChallengeDetailPage() {
                 border: 'none', cursor: 'pointer',
               }}
             >
-              {`Get ${meta ? formatAccountSize(meta.account_size) : 'Challenge'} — Free`}
+              {`Get ${meta ? formatAccountSize(meta.account_size) : 'Challenge'} — $${price}`}
             </button>
           )}
         </div>
@@ -419,6 +419,7 @@ export default function ChallengeDetailPage() {
         tier={tier}
         isPro={isPro}
         specs={specs}
+        originalPrice={price}
       />
     </DashboardLayout>
   )
