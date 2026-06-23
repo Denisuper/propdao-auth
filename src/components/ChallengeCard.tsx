@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import type { Challenge } from '@/lib/challenges'
 import { parseMeta, formatAccountSize } from '@/lib/challenges'
@@ -128,7 +129,11 @@ interface Props {
   fromTier?: string
 }
 
+const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+
 export function ChallengeCard({ challenge, owned, isPro, fromTier }: Props) {
+  const [isHovered, setIsHovered] = useState(false)
+
   const meta = parseMeta(challenge)
   const tier = (meta && TIERS[meta.account_size]) ?? DEFAULT_TIER
   const displayName = isPro ? `${tier.name} Pro` : tier.name
@@ -141,22 +146,42 @@ export function ChallengeCard({ challenge, owned, isPro, fromTier }: Props) {
   const minTradingDays = showProStats ? 3  : (meta?.min_trading_days ?? 5)
   const price          = isPro ? Math.round(challenge.price * 1.4) : challenge.price
 
-  const textMain       = isPro ? '#ffffff' : '#22361f'
-  const textMuted      = isPro ? tier.proTextMuted : '#8b9088'
-  const subtextColor   = isPro ? tier.proSubtextColor : '#a3a8a0'
-  const rowBorder      = isPro ? '1px solid rgba(255,255,255,0.09)' : '1px solid #efefef'
-  const ctaColor       = showProStats ? '#4ee08a' : isPro ? tier.proNameColor : '#22361f'
-  const displayPayout  = isPro ? (tier.proAvgPayout ?? tier.avgPayout) : tier.avgPayout
-  const payoutColor    = isPro ? '#4ee08a' : '#22361f'
+  const textMain      = isPro ? '#ffffff' : '#22361f'
+  const textMuted     = isPro ? tier.proTextMuted : '#8b9088'
+  const subtextColor  = isPro ? tier.proSubtextColor : '#a3a8a0'
+  const rowBorder     = isPro ? '1px solid rgba(255,255,255,0.09)' : '1px solid #efefef'
+  const ctaColor      = showProStats ? '#4ee08a' : isPro ? tier.proNameColor : '#22361f'
+  const displayPayout = isPro ? (tier.proAvgPayout ?? tier.avgPayout) : tier.avgPayout
+  const payoutColor   = isPro ? '#4ee08a' : '#22361f'
 
   type Spec = { label: string; value: string; oldValue?: string }
   const specs: Spec[] = meta ? [
-    { label: 'Profit Target',                    value: `${profitTarget}%`,                                 oldValue: showProStats ? `${meta.profit_target}%`                                   : undefined },
-    { label: 'Max Drawdown',                     value: `${meta.max_drawdown}%` },
-    { label: 'Profit Split',                     value: `${profitSplit}%`,                                  oldValue: showProStats ? '80%'                                                      : undefined },
+    { label: 'Profit Target',                            value: `${profitTarget}%`,                                 oldValue: showProStats ? `${meta.profit_target}%`                                   : undefined },
+    { label: 'Max Drawdown',                             value: `${meta.max_drawdown}%` },
+    { label: 'Profit Split',                             value: `${profitSplit}%`,                                  oldValue: showProStats ? '80%'                                                      : undefined },
     { label: 'Min. Trading Days / Min. Profit to Count', value: `${minTradingDays} days / ${meta.min_trade_size}%`, oldValue: showProStats ? `${meta.min_trading_days} days / ${meta.min_trade_size}%` : undefined },
-    { label: 'Drawdown Type',                    value: showProStats ? meta.drawdown_type : 'Intraday' },
+    { label: 'Drawdown Type',                            value: showProStats ? meta.drawdown_type : 'Intraday' },
   ] : []
+
+  /* ── Hidden bonus badge (reveals on hover) ── */
+  const bonusBadge = (
+    <div style={{
+      position: 'absolute', top: 10, left: 14, zIndex: 5,
+      opacity: isHovered ? 1 : 0,
+      transform: isHovered ? 'scale(1) translateY(0)' : 'scale(0.7) translateY(-8px)',
+      transition: `opacity 0.22s ease, transform 0.35s ${SPRING}`,
+      pointerEvents: 'none',
+    }}>
+      <span style={{
+        display: 'inline-block', fontSize: 10, fontWeight: 800,
+        padding: '4px 9px', borderRadius: 999,
+        background: '#dcfce7', color: '#166534', letterSpacing: '0.5px',
+        boxShadow: '0 2px 8px rgba(22,101,52,0.22)',
+      }}>
+        🎁 FREE BETA ACCESS
+      </span>
+    </div>
+  )
 
   const cardBody = (
     <>
@@ -219,7 +244,7 @@ export function ChallengeCard({ challenge, owned, isPro, fromTier }: Props) {
             </span>
           ) : (
             <>
-              <div>
+              <div className="btn-in">
                 <div style={{ fontSize: 16, fontWeight: 700, color: ctaColor }}>Start Trading →</div>
                 <div style={{ fontSize: 13, color: subtextColor, marginTop: 8 }}>Takes 2 min to set up</div>
               </div>
@@ -236,10 +261,33 @@ export function ChallengeCard({ challenge, owned, isPro, fromTier }: Props) {
 
   if (isPro) {
     return (
-      <Link href={`/marketplace/${challenge.id}?variant=pro${fromTier ? `&from=${fromTier}` : ''}`} className="block h-full transition-transform duration-200 hover:-translate-y-2" style={{ textDecoration: 'none' }}>
-        {/* Gradient border wrapper */}
-        <div style={{ borderRadius: 18, padding: 1.5, background: tier.proGradBorder, boxShadow: tier.proShadow, height: '100%', boxSizing: 'border-box' }}>
-          <div style={{ background: tier.proBgGrad, borderRadius: 16.5, overflow: 'hidden', position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Link
+        href={`/marketplace/${challenge.id}?variant=pro${fromTier ? `&from=${fromTier}` : ''}`}
+        className="block h-full"
+        style={{
+          textDecoration: 'none',
+          display: 'block',
+          transform: isHovered ? 'translateY(-6px)' : 'translateY(0)',
+          transition: `transform 300ms ${SPRING}`,
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div style={{
+          borderRadius: 18, padding: 1.5,
+          background: tier.proGradBorder,
+          boxShadow: isHovered
+            ? `${tier.proShadow}, 0 28px 70px ${tier.proGlow}`
+            : tier.proShadow,
+          height: '100%', boxSizing: 'border-box',
+          transition: 'box-shadow 300ms ease',
+        }}>
+          <div style={{
+            background: tier.proBgGrad, borderRadius: 16.5,
+            overflow: 'hidden', position: 'relative',
+            height: '100%', display: 'flex', flexDirection: 'column',
+          }}>
+            {bonusBadge}
             {/* Ambient glow */}
             <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, pointerEvents: 'none', background: `radial-gradient(circle,${tier.proGlow},transparent 70%)` }} />
             {/* Most Popular ribbon — Silver Pro only */}
@@ -258,8 +306,31 @@ export function ChallengeCard({ challenge, owned, isPro, fromTier }: Props) {
   }
 
   return (
-    <Link href={`/marketplace/${challenge.id}${fromTier ? `?from=${fromTier}` : ''}`} className="block h-full transition-transform duration-200 hover:-translate-y-2" style={{ textDecoration: 'none' }}>
-      <div style={{ background: '#ffffff', border: '1px solid #ececec', borderRadius: 18, boxShadow: '0 10px 30px rgba(30,40,30,0.06)', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Link
+      href={`/marketplace/${challenge.id}${fromTier ? `?from=${fromTier}` : ''}`}
+      className="block h-full"
+      style={{
+        textDecoration: 'none',
+        display: 'block',
+        transform: isHovered ? 'translateY(-6px)' : 'translateY(0)',
+        transition: `transform 300ms ${SPRING}`,
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div style={{
+        background: isHovered ? '#F5F5DC' : '#ffffff',
+        border: isHovered ? `1.5px solid ${tier.color}` : '1px solid #ececec',
+        borderRadius: 18,
+        boxShadow: isHovered
+          ? `0 16px 48px rgba(30,40,30,0.13), 0 0 0 1px ${tier.color}33`
+          : '0 10px 30px rgba(30,40,30,0.06)',
+        overflow: 'hidden', height: '100%',
+        display: 'flex', flexDirection: 'column',
+        position: 'relative',
+        transition: `background 300ms ease, border-color 300ms ease, box-shadow 300ms ease`,
+      }}>
+        {bonusBadge}
         {cardBody}
       </div>
     </Link>

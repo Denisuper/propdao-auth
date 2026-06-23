@@ -146,6 +146,7 @@ export default function ChallengeDetailPage() {
   const [owned,        setOwned]        = useState(false)
   const [isLoading,    setIsLoading]    = useState(true)
   const [modalOpen,    setModalOpen]    = useState(false)
+  const [btnHovered,   setBtnHovered]   = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -207,11 +208,12 @@ export default function ChallengeDetailPage() {
   const ctaColor     = showProStats ? '#4ee08a' : isPro ? tier.proNameColor : '#22361f'
   const rulesBg      = isPro ? 'rgba(255,255,255,0.05)' : '#f8f8f4'
 
-  type Spec = { label: string; value: string; oldValue?: string }
+  type Spec = { label: string; value: string; oldValue?: string; highlight?: boolean }
   const specs: Spec[] = meta ? [
-    { label: 'Profit Target',     value: `${profitTarget}%`,                                  oldValue: showProStats ? `${meta.profit_target}%`     : undefined },
+    { label: 'Profit Target',     value: `${profitTarget}%`,                                  oldValue: showProStats ? `${meta.profit_target}%`       : undefined },
+    { label: 'Avg. Payout',       value: displayPayout,                                       highlight: true },
     { label: 'Max Drawdown',      value: `${meta.max_drawdown}%` },
-    { label: 'Profit Split',      value: `${profitSplit}%`,                                   oldValue: showProStats ? '80%'                         : undefined },
+    { label: 'Profit Split',      value: `${profitSplit}%`,                                   oldValue: showProStats ? '80%'                           : undefined },
     { label: 'Min. Trading Days', value: `${minTradingDays} days`,                            oldValue: showProStats ? `${meta.min_trading_days} days` : undefined },
     { label: 'Min. Profit to Count as Trading Day', value: `${meta.min_trade_size}%` },
     { label: 'Drawdown Type',     value: showProStats ? meta.drawdown_type : 'Intraday' },
@@ -276,7 +278,7 @@ export default function ChallengeDetailPage() {
 
         {/* Spec rows */}
         <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column' }}>
-          {specs.map(({ label, value, oldValue }) => (
+          {specs.map(({ label, value, oldValue, highlight }) => (
             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderTop: rowBorder }}>
               <span style={{ fontSize: 14, color: textMuted }}>{label}</span>
               <span style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
@@ -285,7 +287,7 @@ export default function ChallengeDetailPage() {
                     {oldValue}
                   </span>
                 )}
-                <span style={{ fontSize: 15, fontWeight: 700, color: oldValue ? '#4ee08a' : textMain }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: highlight ? payoutColor : oldValue ? '#4ee08a' : textMain }}>
                   {value}
                 </span>
               </span>
@@ -319,58 +321,27 @@ export default function ChallengeDetailPage() {
 
         {/* Footer */}
         <div style={{ marginTop: 24, paddingTop: 24, borderTop: rowBorder }}>
-          {owned ? (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tier.badge}`}>Enrolled</span>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 12, color: subtextColor }}>Avg. Payout</div>
-                  <div style={{ fontSize: 21, fontWeight: 800, color: payoutColor, letterSpacing: '-0.5px' }}>{displayPayout}</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <Link
-                  href="/dashboard"
-                  style={{ flex: 1, padding: '14px 0', textAlign: 'center', background: isPro ? tier.proSquareGrad : tier.color, color: isPro ? tier.proSquareTextColor : (tier.textDark ? '#1a1a1a' : '#fff'), fontWeight: 700, borderRadius: 12, textDecoration: 'none', fontSize: 15 }}
-                >
-                  Go to Dashboard
-                </Link>
-                <Link
-                  href={backHref}
-                  style={{ flex: 1, padding: '14px 0', textAlign: 'center', border: rowBorder, color: textMain, fontWeight: 600, borderRadius: 12, textDecoration: 'none', fontSize: 15 }}
-                >
-                  Browse More
-                </Link>
-              </div>
-            </>
-          ) : (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16 }}>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: ctaColor }}>Start Trading →</div>
-                <div style={{ fontSize: 13, color: subtextColor, marginTop: 8 }}>Takes 2 min to set up</div>
-              </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontSize: 12, color: subtextColor, whiteSpace: 'nowrap' }}>Avg. Payout</div>
-                <div style={{ fontSize: 21, fontWeight: 800, color: payoutColor, letterSpacing: '-0.5px', marginTop: 3 }}>{displayPayout}</div>
-              </div>
-            </div>
-          )}
-
-          {!owned && (
-            <button
-              onClick={() => setModalOpen(true)}
-              style={{
-                width: '100%', marginTop: 16,
-                padding: '14px 0',
-                background: isPro ? tier.proSquareGrad : tier.color,
-                color: isPro ? tier.proSquareTextColor : (tier.textDark ? '#1a1a1a' : '#fff'),
-                fontWeight: 700, borderRadius: 12, fontSize: 15,
-                border: 'none', cursor: 'pointer',
-              }}
-            >
-              {`Get ${meta ? formatAccountSize(meta.account_size) : 'Challenge'} — $${price}`}
-            </button>
-          )}
+          <button
+            onClick={() => setModalOpen(true)}
+            onMouseEnter={() => setBtnHovered(true)}
+            onMouseLeave={() => setBtnHovered(false)}
+            className="btn-in"
+            style={{
+              width: '100%',
+              padding: '14px 0',
+              background: isPro ? tier.proSquareGrad : tier.color,
+              color: isPro ? tier.proSquareTextColor : (tier.textDark ? '#1a1a1a' : '#fff'),
+              fontWeight: 700, borderRadius: 12, fontSize: 15,
+              border: 'none', cursor: 'pointer',
+              transform: btnHovered ? 'scale(1.03) translateY(-2px)' : 'scale(1) translateY(0)',
+              boxShadow: btnHovered
+                ? `0 12px 32px ${tier.color}66, 0 4px 12px ${tier.color}44`
+                : `0 4px 14px ${tier.color}33`,
+              transition: 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 300ms ease',
+            }}
+          >
+            {`Get ${meta ? formatAccountSize(meta.account_size) : 'Challenge'} — $${price}`}
+          </button>
         </div>
 
       </div>

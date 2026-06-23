@@ -71,7 +71,9 @@ export default function ChallengesPage() {
           <span>✓ 3,000+ funded traders</span>
         </div>
 
-        <TierTabs active={activeTier} onChange={setActiveTier} />
+        <div className="flex justify-center">
+          <TierTabs active={activeTier} onChange={setActiveTier} />
+        </div>
 
         {/* Card pair */}
         <div className="flex gap-5 flex-wrap justify-center items-center select-none">
