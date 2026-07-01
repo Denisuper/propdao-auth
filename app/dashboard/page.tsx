@@ -125,9 +125,10 @@ export default function DashboardPage() {
   }
 
   const walletAddress = user?.user_metadata?.wallet_address as string | undefined
-  const displayName = walletAddress
-    ? `${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)}`
-    : user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there'
+  const displayName = user?.user_metadata?.full_name
+    || (walletAddress ? `${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)}` : undefined)
+    || user?.email?.split('@')[0]
+    || 'there'
   const displayEmail = walletAddress ?? user?.email
 
   const q = query.toLowerCase().trim()
