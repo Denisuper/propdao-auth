@@ -101,16 +101,6 @@ const walletOptions = [
 // IDs: ETH=1027, BNB=1839, SOL=5426, TRX=1958, USDC=3408, USDT=825, ARB=11841, MATIC=3890
 const CMC = (id: number) => `https://s2.coinmarketcap.com/static/img/coins/64x64/${id}.png`
 
-const NETWORK_LOGO_URLS: Record<string, string> = {
-  ethereum: CMC(1027),   // ETH
-  base:     CMC(1027),   // Base uses ETH as gas token; ETH logo is most recognisable
-  arbitrum: CMC(11841),  // ARB
-  polygon:  CMC(3890),   // MATIC/POL
-  bnb:      CMC(1839),   // BNB
-  solana:   CMC(5426),   // SOL
-  tron:     CMC(1958),   // TRX
-}
-
 const TOKEN_LOGO_URLS: Record<string, string> = {
   ETH:  CMC(1027),
   POL:  CMC(3890),
@@ -200,12 +190,6 @@ function TokenLogo({ symbol, size = 18 }: { symbol: string; size?: number }) {
   return <img src={url} alt={symbol} width={size} height={size} style={{ borderRadius: '50%', display: 'block' }} />
 }
 
-function NetworkLogo({ netKey, size = 20 }: { netKey: string; size?: number }) {
-  const url = NETWORK_LOGO_URLS[netKey]
-  if (!url) return null
-  return <img src={url} alt={netKey} width={size} height={size} style={{ borderRadius: '50%', display: 'block' }} />
-}
-
 function CheckoutExperience({
   accountSize,
   challengeName,
@@ -225,8 +209,8 @@ function CheckoutExperience({
 }) {
   const [queryClient] = useState(() => new QueryClient())
   const activeAccount = useActiveAccount()
-  const [selectedNetworkKey, setSelectedNetworkKey] = useState<(typeof NETWORKS)[number]['key']>('ethereum')
-  const selectedNetwork = NETWORKS.find((network) => network.key === selectedNetworkKey) ?? NETWORKS[0]
+  // Checkout runs on Ethereum only — no network or token picker.
+  const selectedNetwork = NETWORKS[0]
   // Checkout is USDC-only (USDT on Tron, which has no widely-used USDC) — one
   // token per network, so there's nothing for the user to pick.
   const tokenGroup = TOKENS.find((group) => group.network === selectedNetwork.key) ?? TOKENS[0]
@@ -290,35 +274,6 @@ function CheckoutExperience({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase', color: '#8f9888', marginBottom: 8 }}>Network</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 6 }}>
-          {NETWORKS.map((option) => {
-            const active = option.key === selectedNetwork.key
-            return (
-              <button
-                key={option.key}
-                type="button"
-                onClick={() => setSelectedNetworkKey(option.key)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  textAlign: 'left',
-                  border: active ? `1.5px solid ${option.tone}` : '1px solid #293027',
-                  background: active ? `${option.tone}18` : '#0d100c',
-                  borderRadius: 10,
-                  padding: '8px 10px',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.15s, background 0.15s',
-                }}
-              >
-                <span style={{ flexShrink: 0, lineHeight: 0 }}><NetworkLogo netKey={option.key} /></span>
-                <div style={{ color: active ? '#d7dbd0' : '#9aa393', fontSize: 12, fontWeight: 700, lineHeight: 1.2 }}>{option.label}</div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
       {selectedNetwork.manual ? (
         /* Solana / Tron — manual send-to-address flow, always priced in the network's stablecoin */
         <div style={{ borderRadius: 14, border: '1px solid #1e2720', background: '#0a0d09', padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
