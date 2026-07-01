@@ -4,9 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { CheckoutWidget, ThirdwebProvider, useActiveAccount } from 'thirdweb/react'
-import { createThirdwebClient, defineChain, NATIVE_TOKEN_ADDRESS } from 'thirdweb'
+import { createThirdwebClient, defineChain } from 'thirdweb'
 import { createWallet } from 'thirdweb/wallets'
-import { convertFiatToCrypto } from 'thirdweb/pay'
 
 interface TierStyle {
   name: string
@@ -51,23 +50,8 @@ type AtomicCapabilityAccount = {
   getCapabilities?: (args: { chainId: number }) => Promise<Record<number, { atomic?: { status?: string } }>>
   sendCalls?: unknown
 }
-const SECRET_DISCOUNT_CODE = '9967'
-const SECRET_DISCOUNT_CHALLENGE_ID = 'prop-5k-000000000-0000-0000-0000-000000000000'
-const SECRET_DISCOUNT_PCT = 99
-
 function normalizeDiscountCode(value: string) {
   return value.trim().toUpperCase()
-}
-
-function discountedPrice(price: number, code: string, challengeId: string) {
-  return normalizeDiscountCode(code) === SECRET_DISCOUNT_CODE && challengeId === SECRET_DISCOUNT_CHALLENGE_ID
-    ? Math.max(1, Math.round(price * (1 - SECRET_DISCOUNT_PCT / 100)))
-    : price
-}
-
-function formatTokenAmount(amount: number) {
-  if (!Number.isFinite(amount) || amount <= 0) return ''
-  return amount.toFixed(10).replace(/\.?0+$/, '')
 }
 
 function disableAtomicCallsForCheckout(account: AtomicCapabilityAccount | undefined) {
@@ -276,22 +260,15 @@ function CheckoutExperience({
   const activeAccount = useActiveAccount()
   const [selectedNetworkKey, setSelectedNetworkKey] = useState<(typeof NETWORKS)[number]['key']>('ethereum')
   const selectedNetwork = NETWORKS.find((network) => network.key === selectedNetworkKey) ?? NETWORKS[0]
+  // Manual (Solana/Tron) send-to-address flow shows an exact dollar amount, so it
+  // always uses the network's stablecoin — thirdweb's CheckoutWidget handles token
+  // choice itself for every other network, we don't restrict it to one asset.
   const tokenGroup = TOKENS.find((group) => group.network === selectedNetwork.key) ?? TOKENS[0]
-  const [selectedTokenSymbol, setSelectedTokenSymbol] = useState(tokenGroup.options[0].symbol)
-  const selectedToken = tokenGroup.options.find((token) => token.symbol === selectedTokenSymbol) ?? tokenGroup.options[0]
-  const payablePrice = discountedPrice(originalPrice, discountCode, challengeId)
-  const selectedTokenAddress = 'address' in selectedToken ? selectedToken.address as EvmAddress : undefined
-  const isNativeEvmToken = !selectedNetwork.manual && !selectedTokenAddress
-  const nativeQuoteKey = `${selectedNetwork.chainId}-${selectedToken.symbol}-${payablePrice}`
-  const [nativeQuote, setNativeQuote] = useState({ key: '', amount: '', error: '' })
-  const nativeAmount = nativeQuote.key === nativeQuoteKey ? nativeQuote.amount : ''
-  const nativeAmountError = nativeQuote.key === nativeQuoteKey ? nativeQuote.error : ''
+  const manualToken = tokenGroup.options.find((token) => token.symbol === 'USDC' || token.symbol === 'USDT') ?? tokenGroup.options[0]
+  const payablePrice = originalPrice
   const selected = {
-    key: `${selectedNetwork.key}-${selectedToken.symbol}-${nativeAmount || payablePrice}`,
+    key: `${selectedNetwork.key}-${payablePrice}`,
     chainId: selectedNetwork.chainId,
-    tokenName: selectedToken.name,
-    tokenSymbol: selectedToken.symbol,
-    tokenAddress: selectedTokenAddress,
     tone: selectedNetwork.tone,
   }
   const selectedChainId = selected.chainId
@@ -331,44 +308,10 @@ function CheckoutExperience({
     })()
   }
 
-  useEffect(() => {
-    let cancelled = false
-
-    if (!isNativeEvmToken) {
-      return
-    }
-
-    convertFiatToCrypto({
-      client: thirdwebClient,
-      from: 'USD',
-      fromAmount: payablePrice,
-      to: NATIVE_TOKEN_ADDRESS,
-      chain: defineChain(selectedChainId),
-    })
-      .then(({ result }) => {
-        if (!cancelled) setNativeQuote({ key: nativeQuoteKey, amount: formatTokenAmount(result), error: '' })
-      })
-      .catch(() => {
-        if (!cancelled) setNativeQuote({ key: nativeQuoteKey, amount: '', error: 'Could not load live token price. Choose USDC/USDT or try again.' })
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [isNativeEvmToken, nativeQuoteKey, payablePrice, selectedChainId])
-
   const image = challengeImage(accountSize, displayName, selectedNetwork.tone)
   const productName = `${accountSize} ${displayName} Evaluation`
   const description = `${challengeName}: funded trading challenge access, instant account activation after checkout, crypto-native payouts, and clear drawdown rules.`
-  const checkoutAmount = isNativeEvmToken ? nativeAmount : String(payablePrice)
-  const checkoutDisabled = isNativeEvmToken && !checkoutAmount
-  const supportedTokens = selectedTokenAddress ? {
-    [selectedNetwork.chainId]: [{
-      address: selectedTokenAddress,
-      name: selectedToken.name,
-      symbol: selectedToken.symbol,
-    }],
-  } : undefined
+  const checkoutAmount = String(payablePrice)
 
   const [copied, setCopied] = useState<string | null>(null)
   function copyToClipboard(text: string, label: string) {
@@ -389,11 +332,7 @@ function CheckoutExperience({
               <button
                 key={option.key}
                 type="button"
-                onClick={() => {
-                  setSelectedNetworkKey(option.key)
-                  const nextGroup = TOKENS.find((group) => group.network === option.key) ?? TOKENS[0]
-                  setSelectedTokenSymbol(nextGroup.options[0].symbol)
-                }}
+                onClick={() => setSelectedNetworkKey(option.key)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
                   textAlign: 'left',
@@ -413,52 +352,21 @@ function CheckoutExperience({
         </div>
       </div>
 
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.8px', textTransform: 'uppercase', color: '#8f9888', marginBottom: 8 }}>Token</div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {tokenGroup.options.map((token) => {
-            const active = token.symbol === selectedToken.symbol
-            return (
-              <button
-                key={token.symbol}
-                type="button"
-                onClick={() => setSelectedTokenSymbol(token.symbol)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 7,
-                  border: active ? `1.5px solid ${selectedNetwork.tone}` : '1px solid #293027',
-                  background: active ? `${selectedNetwork.tone}18` : '#0d100c',
-                  borderRadius: 999,
-                  padding: '7px 13px 7px 9px',
-                  color: active ? '#d7dbd0' : '#9aa393',
-                  cursor: 'pointer',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  transition: 'border-color 0.15s, background 0.15s',
-                }}
-              >
-                <span style={{ flexShrink: 0, lineHeight: 0 }}><TokenLogo symbol={token.symbol} /></span>
-                {token.symbol}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
       {selectedNetwork.manual ? (
-        /* Solana / Tron — manual send-to-address flow */
+        /* Solana / Tron — manual send-to-address flow, always priced in the network's stablecoin */
         <div style={{ borderRadius: 14, border: '1px solid #1e2720', background: '#0a0d09', padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ lineHeight: 0 }}><TokenLogo symbol={selectedToken.symbol} size={22} /></span>
+            <span style={{ lineHeight: 0 }}><TokenLogo symbol={manualToken.symbol} size={22} /></span>
             <div>
-              <div style={{ color: '#d7dbd0', fontWeight: 800, fontSize: 15 }}>Send {selectedToken.symbol} on {selectedNetwork.label}</div>
-              <div style={{ color: '#9aa393', fontSize: 12, marginTop: 2 }}>Exact amount · {selectedToken.name}</div>
+              <div style={{ color: '#d7dbd0', fontWeight: 800, fontSize: 15 }}>Send {manualToken.symbol} on {selectedNetwork.label}</div>
+              <div style={{ color: '#9aa393', fontSize: 12, marginTop: 2 }}>Exact amount · {manualToken.name}</div>
             </div>
           </div>
 
           <div style={{ background: '#111612', borderRadius: 10, padding: '12px 14px' }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#8f9888', marginBottom: 6 }}>Amount to send</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: selectedNetwork.tone, letterSpacing: '-0.5px' }}>
-              ${payablePrice} <span style={{ fontSize: 16, color: '#9aa393', fontWeight: 600 }}>{selectedToken.symbol}</span>
+              ${payablePrice} <span style={{ fontSize: 16, color: '#9aa393', fontWeight: 600 }}>{manualToken.symbol}</span>
             </div>
           </div>
 
@@ -485,39 +393,31 @@ function CheckoutExperience({
         </div>
       ) : (
         <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid #1e2720', boxShadow: '0 2px 16px rgba(0,0,0,0.4)', maxWidth: 420, margin: '0 auto' }}>
-          {checkoutDisabled ? (
-            <div style={{ minHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 22, background: '#0a0d09', color: nativeAmountError ? '#ff8a8a' : '#9aa393', fontSize: 13, fontWeight: 700, textAlign: 'center', lineHeight: 1.5 }}>
-              {nativeAmountError || `Loading live ${selectedToken.symbol} price...`}
-            </div>
-          ) : (
-            <QueryClientProvider client={queryClient}>
-              <CheckoutWidget
-                key={selected.key}
-                client={thirdwebClient}
-                currency="USD"
-                chain={defineChain(selected.chainId)}
-                showThirdwebBranding={false}
-                amount={checkoutAmount}
-                tokenAddress={selected.tokenAddress}
-                seller={selectedNetwork.address as EvmAddress}
-                name={productName}
-                description={description}
-                image={image}
-                buttonLabel={`Pay $${payablePrice}`}
-                theme="dark"
-                paymentMethods={['crypto', 'card']}
-                supportedTokens={supportedTokens}
-                connectOptions={{
-                  wallets: walletOptions,
-                  connectModal: {
-                    size: 'compact',
-                    title: 'Connect wallet',
-                  },
-                }}
-                onSuccess={handleEvmSuccess}
-              />
-            </QueryClientProvider>
-          )}
+          <QueryClientProvider client={queryClient}>
+            <CheckoutWidget
+              key={selected.key}
+              client={thirdwebClient}
+              currency="USD"
+              chain={defineChain(selected.chainId)}
+              showThirdwebBranding={false}
+              amount={checkoutAmount}
+              seller={selectedNetwork.address as EvmAddress}
+              name={productName}
+              description={description}
+              image={image}
+              buttonLabel={`Pay $${payablePrice}`}
+              theme="dark"
+              paymentMethods={['crypto', 'card']}
+              connectOptions={{
+                wallets: walletOptions,
+                connectModal: {
+                  size: 'compact',
+                  title: 'Connect wallet',
+                },
+              }}
+              onSuccess={handleEvmSuccess}
+            />
+          </QueryClientProvider>
         </div>
       )}
 
@@ -535,6 +435,9 @@ export function PurchaseModal({
   const [error,        setError]        = useState<string | null>(null)
   const [confetti,     setConfetti]     = useState<ConfettiPiece[]>([])
   const [discountCode, setDiscountCode] = useState('')
+  const [discount, setDiscount] = useState<{ code: string; finalPrice: number; label: string } | null>(null)
+  const [discountError, setDiscountError] = useState('')
+  const [discountChecking, setDiscountChecking] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -544,8 +447,52 @@ export function PurchaseModal({
       setIsProcessing(false)
       setConfetti([])
       setDiscountCode('')
+      setDiscount(null)
+      setDiscountError('')
     })
   }, [open])
+
+  // Price the discount server-side (same rules /api/purchases/verify enforces at
+  // payment time) so the crypto checkout charges the real discounted amount up
+  // front instead of always billing full price.
+  useEffect(() => {
+    const code = discountCode.trim()
+    if (!code) {
+      setDiscount(null)
+      setDiscountError('')
+      setDiscountChecking(false)
+      return
+    }
+
+    let cancelled = false
+    setDiscountChecking(true)
+    const timer = setTimeout(() => {
+      fetch('/api/marketplace/validate-discount', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, challengeId }),
+      })
+        .then((res) => res.json())
+        .then((data: { valid: boolean; finalPrice?: number; label?: string; error?: string }) => {
+          if (cancelled) return
+          if (data.valid && data.finalPrice != null) {
+            setDiscount({ code: code.toUpperCase(), finalPrice: data.finalPrice, label: data.label ?? '' })
+            setDiscountError('')
+          } else {
+            setDiscount(null)
+            setDiscountError(data.error ?? 'Invalid discount code.')
+          }
+        })
+        .catch(() => {
+          if (!cancelled) { setDiscount(null); setDiscountError('Could not check that code — try again.') }
+        })
+        .finally(() => { if (!cancelled) setDiscountChecking(false) })
+    }, 400)
+
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [discountCode, challengeId])
+
+  const payablePrice = discount ? discount.finalPrice : originalPrice
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
@@ -591,8 +538,6 @@ export function PurchaseModal({
   const displayPayout = isPro
     ? (tier.proAvgPayout ?? tier.avgPayout ?? '$1,800')
     : (tier.avgPayout ?? '$1,800')
-  const discountApplied = normalizeDiscountCode(discountCode) === SECRET_DISCOUNT_CODE && challengeId === SECRET_DISCOUNT_CHALLENGE_ID
-  const totalDue = discountedPrice(originalPrice, discountCode, challengeId)
   const FEATURES = [
     {
       label: 'Keep 90% of every dollar you make',
@@ -720,12 +665,12 @@ export function PurchaseModal({
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '1px solid #242b23', borderBottom: '1px solid #242b23', marginBottom: 20 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: '#d7dbd0' }}>Total due today</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: '#d7dbd0' }}>Total due</span>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                {discountApplied ? (
+                {discount ? (
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#858d80', textDecoration: 'line-through' }}>${originalPrice}</span>
                 ) : null}
-                <span style={{ fontSize: 22, fontWeight: 800, color: '#5dba78' }}>${totalDue}</span>
+                <span style={{ fontSize: 22, fontWeight: 800, color: '#5dba78' }}>${payablePrice}</span>
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#8f9888' }}>USD</span>
               </div>
             </div>
@@ -738,8 +683,8 @@ export function PurchaseModal({
               aria-label="Discount code"
               style={{
                 width: '100%',
-                marginBottom: 18,
-                border: `1px solid ${discountApplied ? '#5dba78' : '#293027'}`,
+                marginBottom: 8,
+                border: `1px solid ${discount ? '#5dba78' : '#293027'}`,
                 background: '#10130f',
                 color: '#d7dbd0',
                 borderRadius: 10,
@@ -751,9 +696,15 @@ export function PurchaseModal({
               }}
             />
 
-            <p style={{ fontSize: 12, color: '#858d80', lineHeight: 1.5, marginBottom: 20, textAlign: 'center' }}>
-              Select a chain and token below. The checkout converts the USD price into the selected crypto payment route.
-            </p>
+            {discount ? (
+              <p style={{ fontSize: 12, color: '#5dba78', fontWeight: 700, marginBottom: 18, textAlign: 'center' }}>{discount.label} applied</p>
+            ) : discountError ? (
+              <p style={{ fontSize: 12, color: '#dc2626', marginBottom: 18, textAlign: 'center' }}>{discountError}</p>
+            ) : (
+              <p style={{ fontSize: 12, color: '#858d80', lineHeight: 1.5, marginBottom: 18, textAlign: 'center' }}>
+                {discountChecking ? 'Checking code...' : ' '}
+              </p>
+            )}
 
             {error && (
               <p style={{ fontSize: 13, color: '#dc2626', marginBottom: 12, textAlign: 'center' }}>{error}</p>
@@ -763,7 +714,7 @@ export function PurchaseModal({
               accountSize={accountSize}
               challengeName={challengeName}
               displayName={displayName}
-              originalPrice={originalPrice}
+              originalPrice={payablePrice}
               discountCode={discountCode}
               challengeId={challengeId}
               onPaymentVerified={handleActivate}

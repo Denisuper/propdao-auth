@@ -12,9 +12,6 @@ export const runtime = 'nodejs'
 const SELLER_ADDRESS = '0x926CcC923DBB4850096278651F0aED54C4005f1f'.toLowerCase()
 const REF_COOKIE = 'pdao_ref'
 const REF_RE = /^[A-Z0-9_-]{3,30}$/
-const SECRET_DISCOUNT_CODE = '9967'
-const SECRET_DISCOUNT_CHALLENGE_ID = 'prop-5k-000000000-0000-0000-0000-000000000000'
-const SECRET_DISCOUNT_PCT = 99
 const NATIVE_TOKEN_ADDRESSES = new Set([
   NATIVE_TOKEN_ADDRESS.toLowerCase(),
   '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
@@ -22,12 +19,6 @@ const NATIVE_TOKEN_ADDRESSES = new Set([
 
 function normalizeDiscountCode(value: unknown) {
   return typeof value === 'string' ? value.trim().toUpperCase() : ''
-}
-
-function requiredChallengePrice(price: number, challengeId: string, discountCode: unknown) {
-  return normalizeDiscountCode(discountCode) === SECRET_DISCOUNT_CODE && challengeId === SECRET_DISCOUNT_CHALLENGE_ID
-    ? Math.max(1, Math.round(price * (1 - SECRET_DISCOUNT_PCT / 100)))
-    : price
 }
 
 function bearerToken(request: NextRequest) {
@@ -91,7 +82,30 @@ export async function POST(request: NextRequest) {
   if (!challenge) {
     return NextResponse.json({ error: 'Challenge not found.' }, { status: 404 })
   }
-  const requiredPrice = requiredChallengePrice(challenge.price, challengeId, discountCode)
+
+  // The client priced the checkout using /api/marketplace/validate-discount before
+  // payment; re-derive and atomically redeem the same code here — this is the
+  // authoritative price the on-chain payment is checked against below.
+  let requiredPrice = challenge.price
+  const rawCode = normalizeDiscountCode(discountCode)
+  if (rawCode) {
+    // `use_discount_code` isn't in the generated Database type (schema was added
+    // via direct migration, not `supabase gen types`) — call it untyped.
+    const { data: rpcResult, error: rpcErr } = await (admin as unknown as { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }> }).rpc('use_discount_code', {
+      p_code:         rawCode,
+      p_user_id:      authData.user.id,
+      p_challenge_id: challengeId,
+      p_price:        challenge.price,
+    })
+    if (rpcErr) {
+      return NextResponse.json({ error: 'Could not apply discount code.' }, { status: 500 })
+    }
+    const result = rpcResult as { ok: boolean; error?: string; final_price?: number }
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error ?? 'Invalid discount code.' }, { status: 400 })
+    }
+    requiredPrice = result.final_price ?? requiredPrice
+  }
 
   // Verify the payment on-chain via ThirdWeb Bridge
   const thirdwebClientId = process.env.THIRDWEB_SECRET_KEY
