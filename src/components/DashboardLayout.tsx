@@ -240,7 +240,13 @@ export function DashboardLayout({ children, userEmail, userAvatar, userId, userN
                         </div>
                       )}
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <p style={{ fontSize: 12, color: 'rgba(214,219,208,0.52)', marginBottom: 1 }}>
+                        <p
+                          title={userEmail}
+                          style={{
+                            fontSize: 12, color: 'rgba(214,219,208,0.52)', marginBottom: 1,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}
+                        >
                           {userEmail}
                         </p>
                         {accountId && (
@@ -291,7 +297,13 @@ export function DashboardLayout({ children, userEmail, userAvatar, userId, userN
                       </div>
                     ) : (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 15, fontWeight: 700, color: '#d7dbd0', flex: 1 }}>
+                        <span
+                          title={displayName || undefined}
+                          style={{
+                            fontSize: 15, fontWeight: 700, color: '#d7dbd0', flex: 1, minWidth: 0,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}
+                        >
                           {displayName || 'Set a username'}
                         </span>
                         <button
@@ -300,7 +312,7 @@ export function DashboardLayout({ children, userEmail, userAvatar, userId, userN
                           style={{
                             background: 'none', border: 'none', cursor: 'pointer',
                             padding: 4, borderRadius: 6, color: 'rgba(214,219,208,0.52)',
-                            display: 'flex', alignItems: 'center',
+                            display: 'flex', alignItems: 'center', flexShrink: 0,
                           }}
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(62,242,120,0.06)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}

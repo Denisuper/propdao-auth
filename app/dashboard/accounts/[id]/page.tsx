@@ -283,11 +283,28 @@ function buildMetrics(account: UserChallenge, data: TerminalData) {
     medianDailyReturn: metricNumber(row, ['median_daily_return'], (medianDaily / size) * 100),
     largestLosingTrade: metricNumber(row, ['largest_losing_trade'], tradePnls.length ? Math.min(...tradePnls) : 0),
     largestWinningTrade: metricNumber(row, ['largest_winning_trade'], tradePnls.length ? Math.max(...tradePnls) : 0),
-    averageRiskPerTrade: metricNumber(row, ['average_risk_per_trade'], 0),
+    // Trade history has no stored stop-loss, so "risk" is approximated as the margin
+    // committed per trade (notional / leverage) relative to account size — how much
+    // capital was on the line, not a hypothetical stop-based loss.
+    averageRiskPerTrade: metricNumber(row, ['average_risk_per_trade'], data.trades.length
+      ? (data.trades.reduce((sum, trade) => {
+          const notional = Math.abs(metricNumber(trade, ['entry'], 0) * metricNumber(trade, ['qty'], 0))
+          const leverage = metricNumber(trade, ['leverage'], 1) || 1
+          return sum + notional / leverage
+        }, 0) / data.trades.length / size) * 100
+      : 0),
     averageLeverage: metricNumber(row, ['average_leverage'], data.trades.length ? data.trades.reduce((sum, trade) => sum + metricNumber(trade, ['leverage'], 0), 0) / data.trades.length : 0),
     maxLeverageUsed: metricNumber(row, ['max_leverage_used'], Math.max(0, ...data.trades.map((trade) => metricNumber(trade, ['leverage'], 0)), ...data.positions.map((pos) => metricNumber(pos, ['leverage'], 0)))),
-    currentExposure: metricNumber(row, ['current_exposure'], 0),
-    marginUsage: metricNumber(row, ['margin_usage'], 0),
+    currentExposure: metricNumber(row, ['current_exposure'], data.positions.reduce((sum, pos) => sum + Math.abs(metricNumber(pos, ['entry'], 0) * metricNumber(pos, ['qty'], 0)), 0)),
+    // Margin currently committed to open positions (notional / leverage) as a share
+    // of equity — genuinely 0% when flat, not a hardcoded fallback.
+    marginUsage: metricNumber(row, ['margin_usage'], equity > 0 && data.positions.length
+      ? (data.positions.reduce((sum, pos) => {
+          const notional = Math.abs(metricNumber(pos, ['entry'], 0) * metricNumber(pos, ['qty'], 0))
+          const leverage = metricNumber(pos, ['leverage'], 1) || 1
+          return sum + notional / leverage
+        }, 0) / equity) * 100
+      : 0),
     liquidationBuffer: metricNumber(row, ['liquidation_buffer'], 0),
     pendingOrders: metricNumber(row, ['pending_orders'], data.pendingOrders.length),
     openRisk: metricNumber(row, ['open_risk'], data.positions.reduce((sum, pos) => sum + Math.abs(metricNumber(pos, ['sl'], 0) * metricNumber(pos, ['qty'], 0)), 0)),
