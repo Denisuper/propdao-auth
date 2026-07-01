@@ -123,12 +123,6 @@ function ChallengesContent() {
           <p className="text-text-secondary mt-1 text-sm">Choose your account size and start your funded trading challenge</p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-1 text-xs text-text-secondary">
-          <span>✓ Instant crypto payouts</span>
-          <span>✓ No time limits</span>
-          <span>✓ 3,000+ funded traders</span>
-        </div>
-
         <div className="flex justify-center">
           <TierTabs active={activeTier} onChange={setActiveTier} />
         </div>

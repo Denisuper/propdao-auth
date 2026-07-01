@@ -132,50 +132,17 @@ const NETWORKS = [
   { key: 'tron',     label: 'Tron',     chainId: 0,     address: TRX_ADDRESS,        tone: '#EF0027', manual: true  },
 ] as const
 
+// Checkout is USDC-only — one token per network, no picker needed.
 // Solana USDC mint: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
-// Tron USDT contract: TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t
+// Tron has no widely-used USDC; keep USDT as its stablecoin.
 const TOKENS = [
-  {
-    network: 'ethereum',
-    options: [
-      { symbol: 'ETH',  name: 'Ethereum' },
-      { symbol: 'USDC', name: 'USD Coin',   address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as EvmAddress },
-      { symbol: 'USDT', name: 'Tether USD', address: '0xdAC17F958D2ee523a2206206994597C13D831ec7' as EvmAddress },
-    ],
-  },
-  {
-    network: 'base',
-    options: [
-      { symbol: 'ETH',  name: 'Ethereum' },
-      { symbol: 'USDC', name: 'USD Coin', address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as EvmAddress },
-    ],
-  },
-  {
-    network: 'arbitrum',
-    options: [
-      { symbol: 'ETH',  name: 'Ethereum' },
-      { symbol: 'USDC', name: 'USD Coin',   address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' as EvmAddress },
-      { symbol: 'USDT', name: 'Tether USD', address: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9' as EvmAddress },
-    ],
-  },
-  {
-    network: 'polygon',
-    options: [
-      { symbol: 'POL',  name: 'Polygon' },
-      { symbol: 'USDC', name: 'USD Coin',   address: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359' as EvmAddress },
-      { symbol: 'USDT', name: 'Tether USD', address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' as EvmAddress },
-    ],
-  },
-  {
-    network: 'bnb',
-    options: [
-      { symbol: 'BNB',  name: 'BNB' },
-      { symbol: 'USDT', name: 'Tether USD', address: '0x55d398326f99059fF775485246999027B3197955' as EvmAddress },
-      { symbol: 'USDC', name: 'USD Coin',   address: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d' as EvmAddress },
-    ],
-  },
-  { network: 'solana', options: [{ symbol: 'SOL', name: 'Solana' }, { symbol: 'USDC', name: 'USD Coin' }] },
-  { network: 'tron',   options: [{ symbol: 'TRX', name: 'Tron'   }, { symbol: 'USDT', name: 'Tether USD' }] },
+  { network: 'ethereum', options: [{ symbol: 'USDC', name: 'USD Coin', address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as EvmAddress }] },
+  { network: 'base',     options: [{ symbol: 'USDC', name: 'USD Coin', address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as EvmAddress }] },
+  { network: 'arbitrum', options: [{ symbol: 'USDC', name: 'USD Coin', address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' as EvmAddress }] },
+  { network: 'polygon',  options: [{ symbol: 'USDC', name: 'USD Coin', address: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359' as EvmAddress }] },
+  { network: 'bnb',      options: [{ symbol: 'USDC', name: 'USD Coin', address: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d' as EvmAddress }] },
+  { network: 'solana',   options: [{ symbol: 'USDC', name: 'USD Coin' }] },
+  { network: 'tron',     options: [{ symbol: 'USDT', name: 'Tether USD' }] },
 ]
 
 function playSuccessSound() {
@@ -260,11 +227,11 @@ function CheckoutExperience({
   const activeAccount = useActiveAccount()
   const [selectedNetworkKey, setSelectedNetworkKey] = useState<(typeof NETWORKS)[number]['key']>('ethereum')
   const selectedNetwork = NETWORKS.find((network) => network.key === selectedNetworkKey) ?? NETWORKS[0]
-  // Manual (Solana/Tron) send-to-address flow shows an exact dollar amount, so it
-  // always uses the network's stablecoin — thirdweb's CheckoutWidget handles token
-  // choice itself for every other network, we don't restrict it to one asset.
+  // Checkout is USDC-only (USDT on Tron, which has no widely-used USDC) — one
+  // token per network, so there's nothing for the user to pick.
   const tokenGroup = TOKENS.find((group) => group.network === selectedNetwork.key) ?? TOKENS[0]
-  const manualToken = tokenGroup.options.find((token) => token.symbol === 'USDC' || token.symbol === 'USDT') ?? tokenGroup.options[0]
+  const stableToken = tokenGroup.options[0]
+  const stableTokenAddress = 'address' in stableToken ? stableToken.address as EvmAddress : undefined
   const payablePrice = originalPrice
   const selected = {
     key: `${selectedNetwork.key}-${payablePrice}`,
@@ -356,17 +323,17 @@ function CheckoutExperience({
         /* Solana / Tron — manual send-to-address flow, always priced in the network's stablecoin */
         <div style={{ borderRadius: 14, border: '1px solid #1e2720', background: '#0a0d09', padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ lineHeight: 0 }}><TokenLogo symbol={manualToken.symbol} size={22} /></span>
+            <span style={{ lineHeight: 0 }}><TokenLogo symbol={stableToken.symbol} size={22} /></span>
             <div>
-              <div style={{ color: '#d7dbd0', fontWeight: 800, fontSize: 15 }}>Send {manualToken.symbol} on {selectedNetwork.label}</div>
-              <div style={{ color: '#9aa393', fontSize: 12, marginTop: 2 }}>Exact amount · {manualToken.name}</div>
+              <div style={{ color: '#d7dbd0', fontWeight: 800, fontSize: 15 }}>Send {stableToken.symbol} on {selectedNetwork.label}</div>
+              <div style={{ color: '#9aa393', fontSize: 12, marginTop: 2 }}>Exact amount · {stableToken.name}</div>
             </div>
           </div>
 
           <div style={{ background: '#111612', borderRadius: 10, padding: '12px 14px' }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#8f9888', marginBottom: 6 }}>Amount to send</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: selectedNetwork.tone, letterSpacing: '-0.5px' }}>
-              ${payablePrice} <span style={{ fontSize: 16, color: '#9aa393', fontWeight: 600 }}>{manualToken.symbol}</span>
+              ${payablePrice} <span style={{ fontSize: 16, color: '#9aa393', fontWeight: 600 }}>{stableToken.symbol}</span>
             </div>
           </div>
 
@@ -401,11 +368,12 @@ function CheckoutExperience({
               chain={defineChain(selected.chainId)}
               showThirdwebBranding={false}
               amount={checkoutAmount}
+              tokenAddress={stableTokenAddress}
               seller={selectedNetwork.address as EvmAddress}
               name={productName}
               description={description}
               image={image}
-              buttonLabel={`Pay $${payablePrice}`}
+              buttonLabel={`Pay ${payablePrice} USDC`}
               theme="dark"
               paymentMethods={['crypto', 'card']}
               connectOptions={{
@@ -670,8 +638,8 @@ export function PurchaseModal({
                 {discount ? (
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#858d80', textDecoration: 'line-through' }}>${originalPrice}</span>
                 ) : null}
-                <span style={{ fontSize: 22, fontWeight: 800, color: '#5dba78' }}>${payablePrice}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#8f9888' }}>USD</span>
+                <span style={{ fontSize: 22, fontWeight: 800, color: '#5dba78' }}>{payablePrice}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#8f9888' }}>USDC</span>
               </div>
             </div>
 
