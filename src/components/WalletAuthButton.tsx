@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createWalletChallenge, authenticateWithWallet } from '@/lib/auth'
 
+type EthereumProvider = {
+  isMetaMask?: boolean
+  providers?: EthereumProvider[]
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
+}
+
 export function WalletAuthButton() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -17,7 +23,8 @@ export function WalletAuthButton() {
 
     // When multiple wallet extensions are installed an aggregator may replace
     // window.ethereum. Find MetaMask specifically via the providers list.
-    const providers = (window.ethereum as any).providers as any[] | undefined
+    const ethereum = window.ethereum as EthereumProvider
+    const providers = ethereum.providers
     const provider = providers?.find((p) => p.isMetaMask) ?? window.ethereum
     if (!provider) {
       toast.error('MetaMask not found. Please install the MetaMask extension.')
@@ -55,11 +62,11 @@ export function WalletAuthButton() {
     <button
       onClick={handleConnect}
       disabled={isLoading}
-      className="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-border shadow-sm"
+      className="propdao-auth-button w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
     >
       {isLoading ? (
         <>
-          <div className="animate-spin h-5 w-5 border-2 border-gray-400 border-t-transparent rounded-full" />
+          <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
           Connecting...
         </>
       ) : (

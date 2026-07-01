@@ -12,7 +12,7 @@ function AuthCompleteInner() {
     const tokenHash = searchParams.get('token_hash')
     const type = searchParams.get('type') as 'magiclink' | 'signup' | null
 
-    // OTP / magic-link flow — NOT auto-handled by Supabase, call explicitly.
+    // OTP / magic-link flow.
     if (tokenHash && type) {
       supabase.auth.verifyOtp({ token_hash: tokenHash, type }).then(({ error }) => {
         if (error) { router.replace('/signin?error=authentication_failed'); return }
@@ -22,7 +22,7 @@ function AuthCompleteInner() {
       return
     }
 
-    // PKCE OAuth flow — Supabase auto-exchanges the ?code= during _initialize()
+    // PKCE OAuth flow.
     // (detectSessionInUrl: true is the default). Calling exchangeCodeForSession here
     // would be a double-call: the verifier is already consumed and removed from
     // localStorage, causing AuthPKCECodeVerifierMissingError. Just wait for the

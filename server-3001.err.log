@@ -1,0 +1,113 @@
+⨯ Error: Could not find the module "[project]/node_modules/sonner/dist/index.mjs#Toaster" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '2630782250'
+}
+⨯ Error: Could not find the module "[project]/node_modules/next/dist/client/components/builtin/global-error.js#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '1934164238'
+}
+⨯ Error: Could not find the module "[project]/node_modules/sonner/dist/index.mjs [app-client] (ecmascript)" in the React Server Consumer Manifest. This is probably a bug in the React Server Components bundler.
+    at ignore-listed frames {
+  digest: '4033872797'
+}
+⨯ Error: Could not find the module "[project]/node_modules/next/dist/client/components/builtin/global-error.js#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '693286753'
+}
+[0m[7m Server [0m Error: Could not find the module "[project]/node_modules/next/dist/client/components/builtin/global-error.js#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>:1:18) {
+  environmentName: 'Server',
+  digest: '693286753'
+}
+⨯ Error: Could not find the module "[project]/node_modules/next/dist/client/components/builtin/global-error.js#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>:1:18) {
+  environmentName: 'Server',
+  digest: '693286753'
+}
+⨯ Error: Could not find the module "[project]/node_modules/next/dist/client/components/builtin/global-error.js#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>:1:18) {
+  environmentName: 'Server',
+  digest: '693286753',
+  page: '/'
+}
+⨯ Error: Could not find the module "[project]/node_modules/next/dist/client/components/builtin/global-error.js#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '693286753'
+}
+[0m[7m Server [0m Error: Could not find the module "[project]/node_modules/next/dist/client/components/builtin/global-error.js#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>:1:18) {
+  environmentName: 'Server',
+  digest: '693286753'
+}
+⨯ Error: Could not find the module "[project]/node_modules/next/dist/client/components/builtin/global-error.js#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>:1:18) {
+  environmentName: 'Server',
+  digest: '693286753'
+}
+⨯ Error: Could not find the module "[project]/node_modules/next/dist/client/components/builtin/global-error.js#default" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>:1:18) {
+  environmentName: 'Server',
+  digest: '693286753',
+  page: '/'
+}
+⨯ Error: Failed to load external module @swc/helpers-1299bef1e47d2b3f/_/_interop_require_default: Error: Cannot find module '@swc/helpers-1299bef1e47d2b3f/_/_interop_require_default'
+Require stack:
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\chunks\ssr\[root-of-the-server]__0xevf_8._.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\chunks\ssr\[turbopack]_runtime.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\app\page.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\require.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\load-components.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\build\utils.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\lib\start-server.js
+    at module evaluation (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\chunks\ssr\[root-of-the-server]__0xevf_8._.js:28:35)
+    at Object.<anonymous> (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\pages\_document.js:3:3)
+⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+[browser] Uncaught SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+⨯ evalmachine.<anonymous>:4
+ent reference proxy)","name":"*","chunks":[],"async":false}},"[project]/Downloads/propdao-auth-master/propdao-auth-master/node_modules/next/dist/client/components/builtin/global-error.js [app-client] (ecmascript)":{"*":{"id":"[project]/Downloads/propdao-auth-master/propdao-auth-master/node_modules/next/dist/client/components/builtin/global-error.js [app-rsc] (client reference proxy)","name":"*","chunks":[],"async":false}},"[project]/Downloads/propdao-auth-master/propdao-auth-master/app/marketplace/page.tsx [app-client] (ecmascript)":{"*":{"id":"[project]/Downloads/propdao-auth-master/propdao-auth-master/app/marketplace/page.tsx [app-rsc] (client reference proxy)","name":"*","chunks":[],"async":false}}},"edgeRscModuleMapping":{},"entryCSSFiles":{"[project]/Downloads/propdao-auth-master/propdao-auth-master/app/layout":[{"path":"static/chunks/[root-of-the-server]__0s_eafm._.css","inlined":false}],"[project]/Downloads/propdao-auth-master/propdao-auth-master/node_modules/next/dist/client/components/builtin/global-error":[{"path":"static/chunks/[root-of-the-server]__0s_eafm._.css","inlined":false}],"[project]/Downloads/propdao-auth-master/propdao-auth-master/app/marketplace/page":[{"path":"static/chunks/[root-of-the-server]__0s_eafm._.css","inlined":false}]},"entryJSFiles":{"[project]/Downloads/propdao-auth-master/propdao-auth-master/app/layout":["static/chunks/node_modules_next_dist_1e9_p6y._.js","static/chunks/1cue_Downloads_propdao-auth-master_propdao-auth-master_app_layout_tsx_007e4b2._.js"],"[project]/Downloads/propdao-auth-master/propdao-auth-master/node_modules/next/dist/client/components/builtin/global-error":["static/chunks/node_modules_next_dist_1e9_p6y._.js","static/chunks/1cue_Downloads_propdao-auth-master_propdao-auth-master_app_layout_tsx_007e4b2._.js","static/chunks/0fqh_next_dist_0taph4n._.js","static/chunks/0fqh_next_dist_client_components_builtin_global-error_0is5rl_.js"],"[project]/Downloads/propdao-auth-master/propdao-auth-master/app/marketplace/page":["static/chunks/node_modules_next_dist_1e9_p6y._.js","static/chunks/1cue_Downloads_propdao-auth-master_propdao-auth-master_app_layout_tsx_007e4b2._.js","static/chunks/[root-of-the-server]__04j85st._.js","static/chunks/node_modules_@supabase_postgrest-js_dist_index_mjs_0pzlnq8._.js","static/chunks/node_modules_@supabase_auth-js_dist_module_1vqrmkg._.js","static/chunks/node_modules_0btsmvr._.js","static/chunks/1_0a_propdao-auth-master_propdao-auth-master_app_marketplace_page_tsx_0is5rl_._.js"]}};
+    ^^^^^^^^^
+
+SyntaxError: Unexpected identifier 'reference'
+    at new Script (node:vm:117:7)
+    at createScript (node:vm:269:10)
+    at runInNewContext (node:vm:310:10)
+    at evalManifest (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\load-manifest.external.js:96:29)
+    at loadManifestFromRelativePath (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\load-manifest.external.js:109:16)
+    at AppPageRouteModule.loadManifests (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.dev.js:71:38307)
+    at AppPageRouteModule.prepare (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.dev.js:71:43611)
+    at async Module.handler (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\chunks\ssr\node_modules_09b914u._.js:4793:27)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\base-server.js:1462:9)
+    at async DevServer.renderPageComponent (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\base-server.js:1514:24) {
+  page: '/marketplace'
+}
+⨯ Error: Failed to load external module @swc/helpers-1299bef1e47d2b3f/_/_interop_require_default: Error: Cannot find module '@swc/helpers-1299bef1e47d2b3f/_/_interop_require_default'
+Require stack:
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\chunks\ssr\[root-of-the-server]__0xevf_8._.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\chunks\ssr\[turbopack]_runtime.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\app\page.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\require.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\load-components.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\build\utils.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\lib\start-server.js
+    at module evaluation (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\chunks\ssr\[root-of-the-server]__0xevf_8._.js:28:35)
+    at Object.<anonymous> (C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\pages\_document.js:3:3)
+[browser] Uncaught Error: Failed to load external module @swc/helpers-1299bef1e47d2b3f/_/_interop_require_default: Error: Cannot find module '@swc/helpers-1299bef1e47d2b3f/_/_interop_require_default'
+Require stack:
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\chunks\ssr\[root-of-the-server]__0xevf_8._.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\chunks\ssr\[turbopack]_runtime.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\.next\dev\server\app\page.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\require.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\load-components.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\build\utils.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\denni\Downloads\propdao-auth-master\propdao-auth-master\node_modules\next\dist\server\lib\start-server.js
+    at module evaluation (.next\dev\server\chunks\ssr\[root-of-the-server]__0xevf_8._.js:28:35)
+    at Object.<anonymous> (.next\dev\server\pages\_document.js:3:3)

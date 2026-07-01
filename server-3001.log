@@ -1,0 +1,12 @@
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://10.0.0.136:3001
+- Environments: .env.local
+✓ Ready in 1536ms
+
+○ Compiling / ...
+○ Compiling /_error ...
+ GET / 500 in 23.7s (next.js: 4.6s, proxy.ts: 1105ms, application-code: 18.0s)
+ GET / 500 in 38.4s (next.js: 37.3s, proxy.ts: 32ms, application-code: 1026ms)
+ GET / 200 in 1410ms (next.js: 246ms, proxy.ts: 307ms, application-code: 857ms)
+ GET /marketplace?tier=starter 500 in 4.2s (next.js: 3.9s, proxy.ts: 204ms, application-code: 172ms)

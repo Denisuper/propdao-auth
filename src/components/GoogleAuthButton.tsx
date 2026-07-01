@@ -23,11 +23,11 @@ export function GoogleAuthButton() {
     <button
       onClick={handleSignIn}
       disabled={isLoading}
-      className="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-border shadow-sm"
+      className="propdao-auth-button w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
     >
       {isLoading ? (
         <>
-          <div className="animate-spin h-5 w-5 border-2 border-gray-400 border-t-transparent rounded-full" />
+          <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
           Signing in...
         </>
       ) : (

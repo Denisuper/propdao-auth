@@ -41,7 +41,7 @@ export function TierTabs({ active, onChange }: TierTabsProps) {
     <div
       ref={containerRef}
       className="relative inline-flex items-center rounded-xl p-1 gap-0"
-      style={{ background: 'rgba(125, 144, 96, 0.13)', border: '1.5px solid #b5c49a' }}
+      style={{ background: 'rgba(62,242,120,0.035)', border: '1px solid rgba(62,242,120,0.10)' }}
     >
       {/* sliding pill */}
       <span
@@ -50,8 +50,8 @@ export function TierTabs({ active, onChange }: TierTabsProps) {
         style={{
           left: pillStyle.left,
           width: pillStyle.width,
-          background: 'linear-gradient(135deg, #92a872 0%, #7d9060 100%)',
-          boxShadow: '0 2px 8px rgba(125,144,96,0.35)',
+          background: '#5dba78',
+          boxShadow: '0 0 22px rgba(62,242,120,0.16)',
           transition: mounted
             ? 'left 260ms cubic-bezier(0.4,0,0.2,1), width 260ms cubic-bezier(0.4,0,0.2,1)'
             : 'none',
@@ -65,7 +65,7 @@ export function TierTabs({ active, onChange }: TierTabsProps) {
           onClick={() => onChange(key)}
           className="relative z-10 px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer focus-visible:outline-none select-none"
           style={{
-            color: active === key ? '#fff' : '#7d9060',
+            color: active === key ? '#111316' : 'rgba(214,219,208,0.58)',
             transition: 'color 200ms ease',
           }}
         >

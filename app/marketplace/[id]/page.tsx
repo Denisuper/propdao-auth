@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
-import { getChallenge, hasChallenge, enrollChallenge, parseMeta, formatAccountSize } from '@/lib/challenges'
+import { getChallenge, hasChallenge, enrollChallenge, parseMeta, formatAccountSize, PRO_CHALLENGE_MAP, isProChallenge } from '@/lib/challenges'
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { PurchaseModal } from '@/components/PurchaseModal'
 import type { Challenge, ChallengeMeta } from '@/lib/challenges'
@@ -78,11 +78,11 @@ const TIERS: Record<number, TierStyle> = {
     name: 'Gold', roman: 'III', label: 'Scale proven traders',
     color: '#eaa31a', textDark: true, badge: 'bg-amber-100 text-amber-800',
     avgPayout: '$2,035', proAvgPayout: '$2,556',
-    proGradBorder: 'linear-gradient(160deg,#f0b53a 0%,#d98c0a 45%,#3a6b4a 100%)',
-    proBgGrad: 'linear-gradient(165deg,#193324 0%,#11241a 60%,#0d1e15 100%)',
+    proGradBorder: 'linear-gradient(160deg,#f0b53a 0%,#d98c0a 45%,#4b5563 100%)',
+    proBgGrad: 'linear-gradient(165deg,#1f2329 0%,#171a1f 60%,#111316 100%)',
     proShadow: '0 24px 60px rgba(20,40,25,0.30),0 0 0 1px rgba(234,163,26,0.10)',
     proGlow: 'rgba(234,163,26,0.22)',
-    proNameColor: '#f3b948', proTextMuted: '#8ea295', proSubtextColor: '#7b8f82',
+    proNameColor: '#f3b948', proTextMuted: '#778295', proSubtextColor: '#8a9099',
     proSquareGrad: 'linear-gradient(150deg,#f3b948,#e0900a)',
     proSquareShadow: '0 8px 22px rgba(234,163,26,0.45)',
     proSquareTextColor: '#241a05',
@@ -131,12 +131,28 @@ const DEFAULT_TIER: TierStyle = {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+function ChallengeDetailFallback() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full" />
+    </div>
+  )
+}
+
 export default function ChallengeDetailPage() {
+  return (
+    <Suspense fallback={<ChallengeDetailFallback />}>
+      <ChallengeDetailContent />
+    </Suspense>
+  )
+}
+
+function ChallengeDetailContent() {
   const router       = useRouter()
   const params       = useParams()
   const searchParams = useSearchParams()
   const id           = params?.id as string
-  const isPro        = searchParams?.get('variant') === 'pro'
+  const wantsPro     = searchParams?.get('variant') === 'pro'
   const fromTier     = searchParams?.get('from')
   const backHref     = fromTier ? `/marketplace?tier=${fromTier}` : '/marketplace'
 
@@ -155,10 +171,14 @@ export default function ChallengeDetailPage() {
       if (!session) { router.push('/signin'); return }
       setUser(session.user)
 
-      const [ch, alreadyOwned] = await Promise.all([
-        getChallenge(id),
+      const proId = PRO_CHALLENGE_MAP[id]
+      const targetId = wantsPro && proId ? proId : id
+      const [ch, stdOwned, proOwned] = await Promise.all([
+        getChallenge(targetId),
         hasChallenge(session.user.id, id),
+        proId ? hasChallenge(session.user.id, proId) : Promise.resolve(false),
       ])
+      const alreadyOwned = wantsPro && proId ? proOwned : stdOwned
 
       if (!ch) { router.push('/marketplace'); return }
       setChallenge(ch)
@@ -167,11 +187,11 @@ export default function ChallengeDetailPage() {
       setIsLoading(false)
     }
     init()
-  }, [router, id])
+  }, [router, id, wantsPro])
 
   const handleEnroll = async () => {
-    if (!user || !challenge) return
-    await enrollChallenge(user.id, challenge.id)
+    // Enrollment already happened server-side inside /api/purchases/verify.
+    // This callback just updates local UI state.
     setOwned(true)
     toast.success('Enrolled! Head to your dashboard to track progress.')
   }
@@ -188,33 +208,32 @@ export default function ChallengeDetailPage() {
 
   const walletAddress = user?.user_metadata?.wallet_address as string | undefined
   const tier          = (meta && TIERS[meta.account_size]) ?? DEFAULT_TIER
+  const isPro         = isProChallenge(challenge)
 
   // Mirror ChallengeCard's pro stat overrides
   const isBronze       = meta ? meta.account_size <= 10000 : false
   const showProStats   = isPro && !isBronze
-  const profitTarget   = showProStats ? 4  : (meta?.profit_target   ?? 6)
-  const profitSplit    = showProStats ? 90 : 80
-  const minTradingDays = showProStats ? 3  : (meta?.min_trading_days ?? 5)
-  const price          = isPro ? Math.round(challenge.price * 1.4) : challenge.price
+  const profitTarget   = meta?.profit_target ?? (showProStats ? 4 : 6)
+  const profitSplit    = meta?.profit_split ?? (showProStats ? 90 : 80)
+  const minTradingDays = meta?.min_trading_days ?? (showProStats ? 3 : 5)
+  const price          = challenge.price
   const displayPayout  = isPro ? (tier.proAvgPayout ?? tier.avgPayout) : tier.avgPayout
   const displayName    = isPro ? `${tier.name} Pro` : tier.name
 
   // Colour tokens — switch between standard (light) and pro (dark)
-  const textMain     = isPro ? '#ffffff'          : '#22361f'
+  const textMain     = isPro ? '#d7dbd0'          : '#22361f'
   const textMuted    = isPro ? tier.proTextMuted  : '#8b9088'
-  const subtextColor = isPro ? tier.proSubtextColor : '#a3a8a0'
-  const rowBorder    = isPro ? '1px solid rgba(255,255,255,0.09)' : '1px solid #efefef'
-  const payoutColor  = isPro ? '#4ee08a' : '#22361f'
-  const ctaColor     = showProStats ? '#4ee08a' : isPro ? tier.proNameColor : '#22361f'
-  const rulesBg      = isPro ? 'rgba(255,255,255,0.05)' : '#f8f8f4'
+  const rowBorder    = isPro ? '1px solid rgba(148,160,180,0.09)' : '1px solid #242b23'
+  const payoutColor  = isPro ? '#94a0b4' : '#22361f'
+  const rulesBg      = isPro ? 'rgba(148,160,180,0.05)' : '#10130f'
 
   type Spec = { label: string; value: string; oldValue?: string; highlight?: boolean }
   const specs: Spec[] = meta ? [
-    { label: 'Profit Target',     value: `${profitTarget}%`,                                  oldValue: showProStats ? `${meta.profit_target}%`       : undefined },
+    { label: 'Profit Target',     value: `${profitTarget}%`,                                  oldValue: showProStats ? '6%'                           : undefined },
     { label: 'Avg. Payout',       value: displayPayout,                                       highlight: true },
     { label: 'Max Drawdown',      value: `${meta.max_drawdown}%` },
     { label: 'Profit Split',      value: `${profitSplit}%`,                                   oldValue: showProStats ? '80%'                           : undefined },
-    { label: 'Min. Trading Days', value: `${minTradingDays} days`,                            oldValue: showProStats ? `${meta.min_trading_days} days` : undefined },
+    { label: 'Min. Trading Days', value: `${minTradingDays} days`,                            oldValue: showProStats ? '5 days'                       : undefined },
     { label: 'Min. Profit to Count as Trading Day', value: `${meta.min_trade_size}%` },
     { label: 'Drawdown Type',     value: showProStats ? meta.drawdown_type : 'Intraday' },
   ] : []
@@ -263,7 +282,7 @@ export default function ChallengeDetailPage() {
             background: isPro ? tier.proSquareGrad : tier.color,
             boxShadow: isPro ? tier.proSquareShadow : `0 4px 14px ${tier.color}55`,
           }}>
-            <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: '1px', color: isPro ? tier.proSquareTextColor : (tier.textDark ? '#1a1a1a' : '#ffffff') }}>
+            <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: '1px', color: isPro ? tier.proSquareTextColor : (tier.textDark ? '#1a1a1a' : '#d7dbd0') }}>
               {tier.roman}
             </span>
           </div>
@@ -283,11 +302,11 @@ export default function ChallengeDetailPage() {
               <span style={{ fontSize: 14, color: textMuted }}>{label}</span>
               <span style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
                 {oldValue && (
-                  <span style={{ fontSize: 15, fontWeight: 700, textDecoration: 'line-through', color: isPro ? '#5e7568' : '#8b9088' }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, textDecoration: 'line-through', color: isPro ? '#8a9099' : '#8b9088' }}>
                     {oldValue}
                   </span>
                 )}
-                <span style={{ fontSize: 15, fontWeight: 700, color: highlight ? payoutColor : oldValue ? '#4ee08a' : textMain }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: highlight ? payoutColor : oldValue ? '#94a0b4' : textMain }}>
                   {value}
                 </span>
               </span>
@@ -306,7 +325,7 @@ export default function ChallengeDetailPage() {
                 <span style={{
                   width: 20, height: 20, borderRadius: 999, flexShrink: 0,
                   background: isPro ? tier.proSquareGrad : tier.color,
-                  color: isPro ? tier.proSquareTextColor : (tier.textDark ? '#1a1a1a' : '#fff'),
+                  color: isPro ? tier.proSquareTextColor : (tier.textDark ? '#1a1a1a' : '#d7dbd0'),
                   fontSize: 11, fontWeight: 800,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   marginTop: 1,
@@ -322,7 +341,10 @@ export default function ChallengeDetailPage() {
         {/* Footer */}
         <div style={{ marginTop: 24, paddingTop: 24, borderTop: rowBorder }}>
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={() => {
+              if (!owned) setModalOpen(true)
+            }}
+            disabled={owned}
             onMouseEnter={() => setBtnHovered(true)}
             onMouseLeave={() => setBtnHovered(false)}
             className="btn-in"
@@ -330,11 +352,12 @@ export default function ChallengeDetailPage() {
               width: '100%',
               padding: '14px 0',
               background: isPro ? tier.proSquareGrad : tier.color,
-              color: isPro ? tier.proSquareTextColor : (tier.textDark ? '#1a1a1a' : '#fff'),
+              color: isPro ? tier.proSquareTextColor : (tier.textDark ? '#1a1a1a' : '#d7dbd0'),
               fontWeight: 700, borderRadius: 12, fontSize: 15,
-              border: 'none', cursor: 'pointer',
-              transform: btnHovered ? 'scale(1.03) translateY(-2px)' : 'scale(1) translateY(0)',
-              boxShadow: btnHovered
+              border: 'none', cursor: owned ? 'default' : 'pointer',
+              opacity: owned ? 0.72 : 1,
+              transform: btnHovered && !owned ? 'scale(1.03) translateY(-2px)' : 'scale(1) translateY(0)',
+              boxShadow: btnHovered && !owned
                 ? `0 12px 32px ${tier.color}66, 0 4px 12px ${tier.color}44`
                 : `0 4px 14px ${tier.color}33`,
               transition: 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 300ms ease',
@@ -352,6 +375,8 @@ export default function ChallengeDetailPage() {
     <DashboardLayout
       userEmail={walletAddress ?? user?.email}
       userAvatar={user?.user_metadata?.avatar_url}
+      userId={user?.id}
+      userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
     >
       <div className="max-w-xl mx-auto space-y-5">
 
@@ -374,7 +399,7 @@ export default function ChallengeDetailPage() {
           </div>
         ) : (
           // Standard: plain white card
-          <div style={{ background: '#ffffff', border: '1px solid #ececec', borderRadius: 18, boxShadow: '0 10px 30px rgba(30,40,30,0.06)', overflow: 'hidden' }}>
+          <div style={{ background: '#d7dbd0', border: '1px solid #242b23', borderRadius: 18, boxShadow: '0 10px 30px rgba(30,40,30,0.06)', overflow: 'hidden' }}>
             {cardInner}
           </div>
         )}
@@ -384,7 +409,8 @@ export default function ChallengeDetailPage() {
       <PurchaseModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onConfirm={handleEnroll}
+        onSuccess={handleEnroll}
+        challengeId={challenge.id}
         challengeName={challenge.name}
         accountSize={meta ? formatAccountSize(meta.account_size) : challenge.name}
         tier={tier}

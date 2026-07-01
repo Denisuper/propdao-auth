@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-primary-dark to-primary flex items-center justify-center px-4 py-8">
+    <div className="propdao-auth-shell min-h-screen flex items-center justify-center px-4 py-8">
       <SignInForm />
     </div>
   )

@@ -4,15 +4,15 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-primary: #92a872;
-  --color-primary-light: #a3b884;
-  --color-primary-dark: #7d9060;
-  --color-secondary: #F5F5DC;
-  --color-secondary-dark: #E8E8CE;
-  --color-text-primary: #2C3E1F;
-  --color-text-secondary: #8B8B7A;
-  --color-border: #D4D4C0;
-  --color-background: #fdfdfb;
+  --color-primary: #3ef278;
+  --color-primary-light: #8ef5ad;
+  --color-primary-dark: #1f8f45;
+  --color-secondary: #111316;
+  --color-secondary-dark: #020502;
+  --color-text-primary: #d7dbd0;
+  --color-text-secondary: rgb(214 219 208 / 0.58);
+  --color-border: rgb(62 242 120 / 0.075);
+  --color-background: #08090b;
 }
 
 html {
@@ -22,6 +22,11 @@ html {
 body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
+}
+
+::selection {
+  background: rgb(62 242 120 / 0.24);
+  color: #111316;
 }
 
 button:disabled {
@@ -69,9 +74,126 @@ button:disabled {
   100% { transform: translateY(110vh) rotate(var(--rot, 540deg)); opacity: 0; }
 }
 
+@keyframes popCheck {
+  0%   { transform: scale(0); }
+  55%  { transform: scale(1.2); }
+  75%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ringPulse {
+  0%   { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 0;   transform: scale(1.7); }
+}
+
+@keyframes featureRow {
+  from { transform: translateX(-14px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes borderGlow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(62,242,120,0.14), 0 20px 50px rgba(0,0,0,0.5); }
+  50%      { box-shadow: 0 0 0 1px rgba(62,242,120,0.30), 0 20px 50px rgba(62,242,120,0.08); }
+}
+
+@keyframes borderGlowHover {
+  0%, 100% { box-shadow: 0 0 32px rgba(62,242,120,0.18), 0 20px 50px rgba(0,0,0,0.4); }
+  50%      { box-shadow: 0 0 56px rgba(62,242,120,0.34), 0 20px 50px rgba(62,242,120,0.10); }
+}
+
+.card-standard {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-standard:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+}
+
+.card-pro {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-pro:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 0 42px rgba(62,242,120,0.22), 0 20px 50px rgba(0,0,0,0.4);
+  animation: borderGlowHover 1.4s ease-in-out infinite !important;
+}
+
+.challenge-card-link {
+  color: inherit;
+  display: block;
+  text-decoration: none;
+  width: 320px;
+  max-width: 100%;
+}
+
+.strike {
+  text-decoration: line-through;
+}
+
 @layer utilities {
   .glass {
     backdrop-filter: blur(12px);
-    background-color: rgb(255 255 255 / 0.8);
+    background-color: rgb(62 242 120 / 0.035);
+  }
+}
+
+@layer components {
+  .propdao-auth-shell {
+    background:
+      radial-gradient(ellipse at 42% 48%, rgb(62 242 120 / 0.13) 0%, rgb(62 242 120 / 0.035) 38%, transparent 67%),
+      radial-gradient(ellipse at 66% 34%, rgb(62 242 120 / 0.07) 0%, rgb(62 242 120 / 0.025) 30%, transparent 58%),
+      radial-gradient(ellipse at 28% 70%, rgb(100 120 86 / 0.10) 0%, rgb(100 120 86 / 0.025) 34%, transparent 62%),
+      #08090b;
+  }
+
+  .propdao-auth-card {
+    background: rgb(10 13 10 / 0.76);
+    border: 1px solid rgb(62 242 120 / 0.14);
+    box-shadow: 0 34px 96px rgb(0 0 0 / 0.48), 0 0 90px rgb(62 242 120 / 0.07);
+    backdrop-filter: blur(18px);
+  }
+
+  .propdao-auth-button {
+    background: rgb(13 15 18 / 0.62);
+    border: 1px solid rgb(62 242 120 / 0.18);
+    color: rgb(214 219 208 / 0.82);
+  }
+
+  .propdao-auth-button:hover {
+    background: rgb(62 242 120 / 0.08);
+    border-color: rgb(62 242 120 / 0.34);
+    color: #d7dbd0;
+    box-shadow: 0 0 0 3px rgb(62 242 120 / 0.06);
+  }
+
+  .propdao-surface {
+    background: rgb(62 242 120 / 0.03);
+    border: 1px solid rgb(62 242 120 / 0.07);
+    box-shadow: 0 16px 40px rgb(0 0 0 / 0.22);
+  }
+
+  .propdao-pro-surface {
+    background: rgb(62 242 120 / 0.035);
+    border: 1px solid rgb(62 242 120 / 0.13);
+    box-shadow: 0 0 0 1px rgb(62 242 120 / 0.08), 0 20px 50px rgb(0 0 0 / 0.5);
+  }
+
+  .propdao-topbar {
+    background: rgb(12 14 17 / 0.78);
+    border-bottom: 1px solid rgb(62 242 120 / 0.06);
+    backdrop-filter: blur(18px);
+  }
+
+  .propdao-input {
+    background: rgb(13 15 18 / 0.62);
+    border: 1px solid rgb(62 242 120 / 0.18);
+    color: #d7dbd0;
+  }
+
+  .propdao-input:focus {
+    border-color: rgb(62 242 120 / 0.34);
+    box-shadow: 0 0 0 3px rgb(62 242 120 / 0.06);
   }
 }
